@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>¿Nos alcanza para una cooperativa de vivienda? Simulador del FNES</title>
-<meta name="description" content="Simulador de una cooperativa de vivienda estudiantil con el FNES: cuánto pagaría cada cuarto, cuánta plata hay que juntar y qué pasa si algo sale mal.">
+<title>¿Nos alcanza para una cooperativa de vivienda?</title>
+<meta name="description" content="Simulador de una cooperativa de vivienda estudiantil: cuánto pagaría cada cuarto, cuánta plata hay que juntar y qué pasa si algo sale mal.">
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -243,6 +243,9 @@ td.v { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .reset { margin-top: 12px; }
 
 footer { color: var(--muted); font-size: 0.85rem; padding: 8px 0 28px; max-width: 70ch; }
+.firma { font-family: var(--mono); font-size: 0.74rem; letter-spacing: 1px; text-transform: uppercase; border-top: 1px solid var(--line); padding-top: 14px; margin-top: 14px; }
+.firma a { color: var(--accent); text-decoration: none; }
+.firma a:hover { text-decoration: underline; }
 
 /* Barra fija de controles */
 .dock {
@@ -296,7 +299,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 8px 0 28px; max-width
 <body>
 <div class="wrap">
   <div class="topbar">
-    <p class="eyebrow">Simulador FNES · Noviembre 2026</p>
+    <p class="eyebrow">Cooperativa de vivienda · Noviembre 2026</p>
     <div class="tools">
       <button class="ghost" type="button" id="shareBtn">Copiar enlace</button>
       <div class="seg" role="group" aria-label="Tema">
@@ -448,6 +451,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 8px 0 28px; max-width
 
   <footer>
     <p>Este es un cálculo para conversar, no un estudio oficial ni una opinión legal. Para formar la cooperativa, el INFOCOOP pide un estudio de viabilidad con números revisados. Noviembre de 2026.</p>
+    <p class="firma">Emmanuel Gutiérrez · <a href="https://egutierrezcr.github.io/" rel="noopener">egutierrezcr.github.io</a></p>
   </footer>
 </div>
 
@@ -465,7 +469,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 8px 0 28px; max-width
 <script>
 (function () {
   "use strict";
-  var STORE_KEY = "fnes-simulador-v2";
+  var STORE_KEY = "simulador-vivienda-v2";
   var DEFAULTS = {
     casas: 3, cuartos: 4, renta: 150000, vacancia: 8,
     precio: 55000000, cierre: 3, remodel: 4000000, mobil: 1500000,
@@ -956,7 +960,7 @@ footer { color: var(--muted); font-size: 0.85rem; padding: 8px 0 28px; max-width
     document.body.style.paddingBottom = (d.offsetHeight + 16) + "px";
   }
 
-  var THEME_KEY = "fnes-tema";
+  var THEME_KEY = "simulador-vivienda-tema";
   function applyTheme(t) {
     if (t === "dark" || t === "light") document.documentElement.setAttribute("data-theme", t);
     else { t = "auto"; document.documentElement.removeAttribute("data-theme"); }

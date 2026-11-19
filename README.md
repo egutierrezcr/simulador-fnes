@@ -1,6 +1,6 @@
-# Simulador del FNES: cooperativa de vivienda
+# ¿Nos alcanza para una cooperativa de vivienda?
 
-Calculadora web de una sola página para contestar una pregunta concreta: ¿nos alcanza para una cooperativa de vivienda estudiantil con el Fondo Nacional de Economía Social (FNES)?
+Calculadora web de una sola página para contestar una pregunta concreta: ¿alcanza la plata para una cooperativa de vivienda estudiantil?
 
 **Ver el simulador:** https://egutierrezcr.github.io/simulador-fnes/
 
@@ -36,6 +36,10 @@ El botón "Copiar enlace" arma una dirección con los números que uno puso, par
 ## Diseño
 
 Sigue la línea gráfica de My Intelligent System: Space Grotesk para títulos y cifras, Public Sans para el cuerpo, IBM Plex Mono para etiquetas y datos, tarjetas de borde fino sobre retícula de puntos.
+
+## Firma
+
+Emmanuel Gutiérrez, [egutierrezcr.github.io](https://egutierrezcr.github.io/).
 
 ## Licencia
 
