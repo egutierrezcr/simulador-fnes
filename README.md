@@ -27,7 +27,7 @@ Es un solo archivo sin dependencias ni compilación. Abrir `index.html` en el na
 python -m http.server 8000
 ```
 
-Tiene tema claro y oscuro (sigue el del sistema y se puede cambiar a mano).
+Se adapta al tema claro u oscuro del sistema; no trae botón para cambiarlo.
 
 ## Licencia
 
