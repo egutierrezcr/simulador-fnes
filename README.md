@@ -6,7 +6,9 @@ Calculadora web de una sola página para contestar una pregunta concreta: ¿nos 
 
 ## Qué muestra
 
+- Si alcanza o no, en una línea, apenas abre la página.
 - Cuánto tendría que pagar cada cuarto al mes.
+- Cuánto se ahorraría quien vive ahí, al mes, al año y en una carrera de cuatro años.
 - Por qué con más casas el costo por cuarto baja.
 - Cuánta plata hay que juntar para comprar.
 - Si el modelo aguanta 10 años.
@@ -27,7 +29,13 @@ Es un solo archivo sin dependencias ni compilación. Abrir `index.html` en el na
 python -m http.server 8000
 ```
 
-Se adapta al tema claro u oscuro del sistema; no trae botón para cambiarlo.
+Trae tema claro y oscuro, con un control en la esquina para fijar uno o seguir el del sistema.
+
+El botón "Copiar enlace" arma una dirección con los números que uno puso, para mandarla por WhatsApp y que el otro abra el mismo escenario.
+
+## Diseño
+
+Sigue la línea gráfica de My Intelligent System: Space Grotesk para títulos y cifras, Public Sans para el cuerpo, IBM Plex Mono para etiquetas y datos, tarjetas de borde fino sobre retícula de puntos.
 
 ## Licencia
 
