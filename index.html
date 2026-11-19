@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>¿Nos alcanza para una cooperativa de vivienda? Simulador del FNES</title>
+<style>
+:root {
+  --bg: #EFF5F5;
+  --surface: #FFFFFF;
+  --surface-2: #F4F8F8;
+  --ink: #17262C;
+  --muted: #53656C;
+  --line: #D4E0E2;
+  --slate: #3A5864;
+  --teal: #0A7F84;
+  --teal-soft: #D2EDEC;
+  --mango: #E89E25;
+  --mango-soft: #FCEBC9;
+  --mango-ink: #845203;
+  --red: #C23D33;
+  --red-soft: #F8DCD8;
+  --font: "Trebuchet MS", "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Tahoma, sans-serif;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E171B; --surface: #152329; --surface-2: #1A2B32; --ink: #E5EEF0; --muted: #9CADB4;
+    --line: #2A3D45; --slate: #91ADB8; --teal: #4CBBBF; --teal-soft: #163A3C; --mango: #F2B650;
+    --mango-soft: #3B2F16; --mango-ink: #F5CB7A; --red: #EE746A; --red-soft: #3F201E; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E171B; --surface: #152329; --surface-2: #1A2B32; --ink: #E5EEF0; --muted: #9CADB4;
+  --line: #2A3D45; --slate: #91ADB8; --teal: #4CBBBF; --teal-soft: #163A3C; --mango: #F2B650;
+  --mango-soft: #3B2F16; --mango-ink: #F5CB7A; --red: #EE746A; --red-soft: #3F201E; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 12px); scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 17px;
+  line-height: 1.55;
+  padding-bottom: 140px;
+}
+:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+p { margin: 0 0 0.8em; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 0 18px; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pos { color: var(--teal); }
+.neg { color: var(--red); }
+.small { font-size: 0.9rem; color: var(--muted); }
+
+/* Encabezado */
+header { padding: 30px 0 6px; }
+h1 { font-size: clamp(1.7rem, 1.2rem + 2vw, 2.5rem); line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.01em; }
+.intro { font-size: 1.05rem; color: var(--muted); max-width: 60ch; }
+.steps-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 10px; padding: 0; list-style: none; }
+.steps-nav a {
+  display: inline-flex; align-items: center; gap: 7px;
+  text-decoration: none; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 13px 6px 6px; font-size: 0.93rem;
+}
+.steps-nav a:hover { border-color: var(--teal); }
+.steps-nav b {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--mango-soft); color: var(--mango-ink); font-size: 0.8rem;
+}
+.try { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 0; }
+.try span { color: var(--muted); font-size: 0.93rem; }
+.chip {
+  font: inherit; font-size: 0.93rem; cursor: pointer;
+  border: 1.5px solid var(--teal); background: transparent; color: var(--teal);
+  padding: 5px 13px; border-radius: 999px;
+}
+.chip:hover, .chip[aria-pressed="true"] { background: var(--teal); color: var(--surface); }
+
+/* Secciones */
+section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 22px 18px;
+  margin: 18px 0;
+}
+.sec-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.badge {
+  flex: none; display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--mango); color: #2A1A00; font-weight: 700; font-size: 1.1rem;
+}
+h2 { font-size: 1.4rem; line-height: 1.25; margin: 4px 0 0; }
+h3 { font-size: 1.08rem; margin: 22px 0 8px; }
+.big { font-size: clamp(2.2rem, 1.6rem + 3vw, 3.3rem); font-weight: 700; line-height: 1.05; margin: 4px 0 6px; font-variant-numeric: tabular-nums; }
+.big-sub { font-size: 1.05rem; margin: 0 0 16px; max-width: 60ch; }
+.lead { font-size: 1.08rem; max-width: 60ch; }
+.callout {
+  border-radius: 10px; padding: 12px 14px; margin: 12px 0; max-width: 62ch;
+  background: var(--mango-soft); border: 1px solid var(--mango);
+}
+.callout.hidden { display: none; }
+
+/* Casas */
+.houses { display: block; height: 70px; max-width: 100%; margin: 0 0 8px; }
+.houses .roof { fill: var(--teal); }
+.houses .wall { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 1.5; }
+.houses .win { fill: var(--mango-soft); stroke: var(--mango); stroke-width: 1.2; }
+
+/* Escala */
+.scale { display: block; width: 100%; margin: 6px 0 2px; }
+.scale text { font-family: var(--font); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--muted); margin: 4px 0 12px; }
+.key i { display: inline-block; width: 13px; height: 13px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.key .dash { width: 18px; height: 0; border-top: 2px dashed var(--ink); border-radius: 0; vertical-align: 3px; }
+
+/* Columnas */
+.cols { position: relative; margin: 10px 0 4px; }
+.cols-plot { position: relative; display: flex; align-items: stretch; gap: 8px; border-bottom: 2px solid var(--line); }
+.cols-plot .col { position: relative; flex: 1; }
+.cols-plot .bar { position: absolute; left: 12%; right: 12%; border-radius: 6px 6px 0 0; }
+.cols-plot .bar.down { border-radius: 0 0 6px 6px; }
+.cols-plot .val { position: absolute; left: -6px; right: -6px; text-align: center; font-size: 0.78rem; font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 3; }
+.cols-plot .val em { font-style: normal; background: var(--surface); padding: 0 2px; border-radius: 3px; }
+.cols-cap { text-align: center; font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.cols-plot .band { position: absolute; left: 0; right: 0; background: var(--mango-soft); border-top: 1px solid var(--mango); border-bottom: 1px solid var(--mango); }
+.cols-plot .line { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--ink); z-index: 2; }
+.cols-plot .zero { position: absolute; left: 0; right: 0; border-top: 2px solid var(--muted); z-index: 1; }
+.cols-x { display: flex; gap: 8px; margin-top: 6px; }
+.cols-x span { flex: 1; text-align: center; font-size: 0.82rem; color: var(--muted); }
+.cols-x span.on { color: var(--ink); font-weight: 700; }
+
+/* Cuadritos */
+.waffle-row { display: grid; grid-template-columns: minmax(0, 240px) 1fr; gap: 20px; align-items: center; margin: 12px 0; }
+.waffle { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; }
+.waffle i { aspect-ratio: 1; border-radius: 3px; background: var(--red-soft); }
+.waffle i.own { background: var(--teal); border-color: var(--teal); }
+
+/* Desglose */
+.rows { margin: 8px 0 4px; }
+.row { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.row .track { grid-column: 1 / -1; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.row .track i { display: block; height: 100%; background: var(--slate); border-radius: 4px; }
+.row b { font-variant-numeric: tabular-nums; }
+
+/* Barra de 100 */
+.hundred { display: flex; height: 44px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: var(--surface-2); position: relative; margin: 10px 0 8px; }
+.hundred div { height: 100%; display: grid; place-items: center; font-size: 0.8rem; font-weight: 700; color: var(--ink); overflow: hidden; white-space: nowrap; }
+.hundred .marker { position: absolute; top: 0; bottom: 0; border-left: 3px solid var(--ink); }
+.legend-list { list-style: none; padding: 0; margin: 6px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 18px; font-size: 0.93rem; }
+.legend-list li { display: flex; gap: 8px; align-items: center; }
+.legend-list i { flex: none; width: 13px; height: 13px; border-radius: 3px; }
+
+/* Riesgos */
+.risks { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 12px 0 6px; }
+.risk { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface-2); }
+.risk p { margin: 0; }
+.risk .q { font-size: 0.95rem; min-height: 2.9em; }
+.risk .v { font-size: 1.15rem; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.risk .d { font-size: 0.85rem; color: var(--muted); }
+.sev { height: 6px; background: var(--line); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+.sev i { display: block; height: 100%; background: var(--red); border-radius: 3px; }
+
+/* Piloto */
+.ctl { padding: 6px 0; max-width: 560px; }
+.ctl-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.ctl label { font-size: 0.93rem; }
+.ctl output { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+input[type="range"] { width: 100%; accent-color: var(--teal); margin: 6px 0 0; height: 28px; }
+.check { display: flex; gap: 10px; align-items: center; margin: 8px 0 4px; cursor: pointer; font-size: 0.95rem; }
+.check input { width: 22px; height: 22px; accent-color: var(--teal); flex: none; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 14px 0 4px; }
+.fact { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; }
+.fact span { display: block; font-size: 0.88rem; color: var(--muted); }
+.fact b { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+
+/* Reglas */
+.rules { list-style: none; padding: 0; margin: 4px 0 0; }
+.rules li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.rules li:last-child { border-bottom: 0; }
+.rules .tick { width: 26px; height: 26px; border-radius: 50%; background: var(--teal-soft); color: var(--teal); display: grid; place-items: center; font-weight: 700; }
+.rules small { display: block; color: var(--muted); font-size: 0.82rem; margin-top: 2px; }
+
+/* Avanzado */
+details.more { border-top: 1px solid var(--line); margin-top: 8px; }
+details.more summary { cursor: pointer; font-weight: 700; padding: 12px 0; color: var(--teal); }
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 28px; }
+.groups h4 { margin: 16px 0 4px; font-size: 0.95rem; color: var(--slate); }
+.fixed { font-size: 0.85rem; color: var(--muted); padding: 4px 0; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin: 8px 0 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 0.9rem; }
+th, td { text-align: left; padding: 8px 11px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td.v { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.reset { margin-top: 10px; }
+
+footer { color: var(--muted); font-size: 0.86rem; padding: 6px 0 24px; }
+
+/* Barra fija de controles */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.08);
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.dock-in { max-width: 780px; margin: 0 auto; padding: 0 14px; display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px 14px; align-items: end; }
+.dock-status { font-size: 0.95rem; line-height: 1.3; align-self: center; }
+.dock-status b { font-size: 1.05rem; }
+.dock-ctl span { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 3px; }
+.step { display: inline-flex; align-items: center; gap: 6px; }
+.step button {
+  font: inherit; font-size: 1.15rem; line-height: 1; cursor: pointer;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1.5px solid var(--teal); background: var(--surface); color: var(--teal);
+}
+.step button:hover { background: var(--teal); color: var(--surface); }
+.step b { min-width: 1.4ch; text-align: center; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.step b.wide { min-width: 6.6ch; }
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  section { padding: 20px 16px 14px; border-radius: 14px; }
+  .dock-in { grid-template-columns: auto auto 1fr; }
+  .dock-status { grid-column: 1 / -1; }
+  .dock-ctl:last-child { justify-self: end; }
+  .step button { width: 34px; height: 34px; }
+  .waffle-row { grid-template-columns: 1fr; }
+  .waffle { max-width: 240px; }
+  .steps-nav { flex-wrap: nowrap; overflow-x: auto; margin-left: -18px; margin-right: -18px; padding: 2px 18px 6px; scrollbar-width: none; }
+  .steps-nav::-webkit-scrollbar { display: none; }
+  .steps-nav a { white-space: nowrap; }
+  .risk .q { min-height: 0; }
+}
+@media print {
+  .dock, .try, .steps-nav { display: none; }
+  body { padding-bottom: 0; }
+  section { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>¿Nos alcanza para una cooperativa de vivienda?</h1>
+    <p class="intro">La idea: casas cerca de la U donde estudiantes alquilan cuartos a precio de costo, sin que nadie gane plata con eso. Cambiá los números en la barra de abajo y mirá qué pasa.</p>
+    <ul class="steps-nav" aria-label="Pasos">
+      <li><a href="#cobrar"><b>1</b>Cobrar</a></li>
+      <li><a href="#juntar"><b>2</b>Juntar</a></li>
+      <li><a href="#aguantar"><b>3</b>Aguantar</a></li>
+      <li><a href="#riesgos"><b>4</b>Si sale mal</a></li>
+      <li><a href="#empezar"><b>5</b>Empezar chiquito</a></li>
+      <li><a href="#reglas"><b>!</b>Reglas</a></li>
+    </ul>
+    <div class="try" role="group" aria-label="Escenarios para probar">
+      <span>Probá:</span>
+      <button class="chip" type="button" data-preset="una">1 casa</button>
+      <button class="chip" type="button" data-preset="tres">3 casas</button>
+      <button class="chip" type="button" data-preset="corto">Préstamo a 10 años</button>
+      <button class="chip" type="button" data-preset="malo">Año malo</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="cobrar" aria-labelledby="t1">
+      <div class="sec-head"><span class="badge" aria-hidden="true">1</span><h2 id="t1">¿Cuánto tiene que pagar cada cuarto?</h2></div>
+      <svg class="houses" id="houses" role="img"></svg>
+      <p class="small" id="housesCap"></p>
+      <p class="big" id="eqBig">₡0</p>
+      <p class="big-sub">al mes, como mínimo, para que la cooperativa no pierda plata.</p>
+      <div id="scaleWrap"><svg class="scale" id="scale" role="img" aria-label="Escala de cuota por cuarto"></svg></div>
+      <div class="key">
+        <span><i style="background:var(--red-soft);border:1px solid var(--red)"></i>Pierde plata</span>
+        <span><i style="background:var(--teal-soft);border:1px solid var(--teal)"></i>Alcanza</span>
+        <span><i style="background:var(--mango-soft);border:1px solid var(--mango)"></i>Lo que cobran en San Pedro</span>
+      </div>
+      <p class="lead" id="cobrarTxt"></p>
+
+      <h3>¿Por qué con más casas sale más barato?</h3>
+      <p id="escalaTxt"></p>
+      <div class="cols" id="escala" role="img" aria-label="Cuota mínima por cuarto según el número de casas"></div>
+      <div class="key">
+        <span><i class="dash"></i>Tu cuota</span>
+        <span><i style="background:var(--mango-soft);border:1px solid var(--mango)"></i>Lo que cobran en San Pedro</span>
+      </div>
+    </section>
+
+    <section id="juntar" aria-labelledby="t2">
+      <div class="sec-head"><span class="badge" aria-hidden="true">2</span><h2 id="t2">¿Cuánta plata hay que juntar para comprar?</h2></div>
+      <p class="big" id="capBig">₡0</p>
+      <p class="big-sub">antes de recibir el préstamo. Es la parte que el banco o el INFOCOOP no prestan.</p>
+      <div class="rows" id="capRows"></div>
+      <div class="waffle-row">
+        <div class="waffle" id="waffle" role="img"></div>
+        <p id="waffleTxt" style="margin:0"></p>
+      </div>
+      <div class="callout hidden" id="minAlert"></div>
+      <p class="small" id="loanTxt"></p>
+    </section>
+
+    <section id="aguantar" aria-labelledby="t3">
+      <div class="sec-head"><span class="badge" aria-hidden="true">3</span><h2 id="t3">¿Aguanta 10 años?</h2></div>
+      <p class="lead" id="aguantarTxt"></p>
+      <div class="cols" id="years" role="img" aria-label="Plata que sobra o falta cada año durante 10 años"></div>
+      <p class="small" id="yearsNote"></p>
+      <h3 id="hundredTitle">De cada ₡100 que pagarían los cuartos, ¿adónde se van?</h3>
+      <div class="hundred" id="hundred" aria-hidden="true"></div>
+      <ul class="legend-list" id="hundredList"></ul>
+      <p class="small" id="hundredNote" style="margin-top:10px"></p>
+    </section>
+
+    <section id="riesgos" aria-labelledby="t4">
+      <div class="sec-head"><span class="badge" aria-hidden="true">4</span><h2 id="t4">¿Qué pasa si algo sale mal?</h2></div>
+      <p class="lead" id="riesgosTxt"></p>
+      <div class="risks" id="risks"></div>
+      <p id="riesgosEnd"></p>
+    </section>
+
+    <section id="empezar" aria-labelledby="t5">
+      <div class="sec-head"><span class="badge" aria-hidden="true">5</span><h2 id="t5">¿Y si empezamos alquilando una casa?</h2></div>
+      <p class="lead">Antes de comprar, la cooperativa puede alquilar una casa cerca de la U y alquilarles los cuartos a sus socios. Así se prueba si funciona sin endeudarse.</p>
+      <p class="small">El dueño tiene que aceptar por escrito que subalquilemos los cuartos, y el contrato dura al menos 3 años.</p>
+      <div id="pilotCtl"></div>
+      <label class="check"><input type="checkbox" id="pDonada"> Alguien nos ayuda gratis con la contabilidad</label>
+      <div class="facts" id="pilotFacts"></div>
+      <h3>Lo que entra y lo que sale cada mes</h3>
+      <div class="hundred" id="pilotBar" aria-hidden="true"></div>
+      <ul class="legend-list" id="pilotList"></ul>
+    </section>
+
+    <section id="reglas" aria-labelledby="t6">
+      <div class="sec-head"><span class="badge" aria-hidden="true">!</span><h2 id="t6">Reglas que no se pueden saltar</h2></div>
+      <ul class="rules">
+        <li><span class="tick" aria-hidden="true">✓</span><div>Para formar la cooperativa hacen falta al menos 8 personas.<small>Ley 4179, artículo 31, reformado por la Ley 10451. Hay que confirmarlo en el SCIJ antes de la asamblea.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>Si sobra plata, vuelve como descuento a quienes viven ahí, según cuánto usaron. No se reparte según cuánto puso cada quien.<small>Ley 4179, artículo 3.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>El aporte no se puede promocionar como una inversión que da ganancias.<small>Ley 4179 y normas de SUGEF y SUGEVAL sobre captar plata del público.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>Si alquilamos, el dueño tiene que aceptar por escrito que subalquilemos los cuartos.<small>Ley 7527 de alquileres.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>Desde los 15 años se puede ser socio, pero menores de 18 no pueden hacer trabajos de construcción ni de electricidad.<small>Ley 4179, artículo 57, y Ley 8922.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>La cooperativa paga el impuesto de la casa, igual que cualquier dueño.<small>Ley 7509; Procuraduría, dictamen C-258-2011.</small></div></li>
+        <li><span class="tick" aria-hidden="true">✓</span><div>Para arreglos que toquen paredes o electricidad hace falta permiso de la municipalidad y un profesional del CFIA.<small>Ley de Construcciones, artículo 83 bis.</small></div></li>
+      </ul>
+    </section>
+
+    <section id="numeros" aria-labelledby="t7">
+      <div class="sec-head"><span class="badge" aria-hidden="true">₡</span><h2 id="t7">Para quien quiera revisar los números</h2></div>
+      <p>Todo se puede cambiar. Los valores iniciales salen del informe de noviembre de 2026; los marcados como supuesto hay que cotizarlos.</p>
+      <details class="more">
+        <summary>Cambiar todos los supuestos</summary>
+        <div class="groups" id="groups"></div>
+        <button class="chip reset" type="button" id="resetBtn">Volver a los números del informe</button>
+      </details>
+      <details class="more">
+        <summary>De dónde salen los números</summary>
+        <div class="table-wrap"><table><thead><tr><th>Dato</th><th>Valor</th><th>Fuente</th></tr></thead><tbody id="srcTable"></tbody></table></div>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <p>Este es un cálculo para conversar, no un estudio oficial ni una opinión legal. Para formar la cooperativa, el INFOCOOP pide un estudio de viabilidad con números revisados. Noviembre de 2026.</p>
+  </footer>
+</div>
+
+<div class="dock" id="dock" role="region" aria-label="Tus números">
+  <div class="dock-in">
+    <div class="dock-status" id="dockStatus" aria-live="polite"></div>
+    <div class="dock-ctl"><span>Casas</span><div class="step"><button type="button" data-step="casas" data-d="-1" aria-label="Una casa menos">−</button><b id="dCasas">3</b><button type="button" data-step="casas" data-d="1" aria-label="Una casa más">+</button></div></div>
+    <div class="dock-ctl"><span>Cuartos por casa</span><div class="step"><button type="button" data-step="cuartos" data-d="-1" aria-label="Un cuarto menos por casa">−</button><b id="dCuartos">4</b><button type="button" data-step="cuartos" data-d="1" aria-label="Un cuarto más por casa">+</button></div></div>
+    <div class="dock-ctl"><span>Cuota por cuarto</span><div class="step"><button type="button" data-step="renta" data-d="-5000" aria-label="Bajar la cuota 5.000 colones">−</button><b id="dRenta" class="wide">₡150.000</b><button type="button" data-step="renta" data-d="5000" aria-label="Subir la cuota 5.000 colones">+</button></div></div>
+  </div>
+</div>
+
+<noscript><p style="padding:20px">Este simulador necesita JavaScript.</p></noscript>
+
+<script>
+(function () {
+  "use strict";
+  var STORE_KEY = "fnes-simulador-v2";
+  var DEFAULTS = {
+    casas: 3, cuartos: 4, renta: 150000, vacancia: 8,
+    precio: 55000000, cierre: 3, remodel: 4000000, mobil: 1500000,
+    financiado: 80, tasa: 6.25, plazo: 20,
+    servicios: 90000, mant: 1, seguro: 0.15, isbi: 0.25,
+    adminBase: 1500000, adminCasa: 300000, index: 3,
+    aporte: 150000, reservas: 25, mMin: 160000, mMax: 175000,
+    pAlquiler: 250000, pReserva: 46000, pAdmin: 150000, pDonada: false, pDeposito: 1, pMobil: 1500000
+  };
+  var LIMITS = { casas: [1, 6], cuartos: [2, 8], renta: [80000, 260000] };
+  var PRESETS = { una: { casas: 1 }, tres: { casas: 3 }, corto: { casas: 3, plazo: 10 }, malo: { casas: 3, vacancia: 15, tasa: 8 } };
+  var GROUPS = [
+    { title: "La casa", items: [
+      { k: "precio", label: "Precio de cada casa", min: 20000000, max: 120000000, step: 500000, fmt: "crc" },
+      { k: "cierre", label: "Notario, traspaso y papeles", min: 0, max: 8, step: 0.25, fmt: "pct" },
+      { k: "remodel", label: "Arreglos por casa", min: 0, max: 15000000, step: 250000, fmt: "crc" },
+      { k: "mobil", label: "Muebles por casa", min: 0, max: 5000000, step: 100000, fmt: "crc" }
+    ]},
+    { title: "El préstamo", items: [
+      { k: "financiado", label: "Parte que presta el banco", min: 0, max: 100, step: 5, fmt: "pct" },
+      { k: "tasa", label: "Interés al año", min: 2, max: 14, step: 0.25, fmt: "pct" },
+      { k: "plazo", label: "Años para pagarlo", min: 5, max: 30, step: 1, fmt: "anos" }
+    ]},
+    { title: "Gastos de cada año", items: [
+      { k: "vacancia", label: "Cuartos vacíos durante el año", min: 0, max: 30, step: 1, fmt: "pct" },
+      { k: "servicios", label: "Agua, luz e internet por casa al mes", min: 0, max: 250000, step: 5000, fmt: "crc" },
+      { k: "mant", label: "Mantenimiento al año (del precio)", min: 0, max: 3, step: 0.1, fmt: "pct" },
+      { k: "seguro", label: "Seguro al año (del precio)", min: 0, max: 1, step: 0.05, fmt: "pct" },
+      { k: "adminBase", label: "Contador y administración al año", min: 0, max: 5000000, step: 100000, fmt: "crc" },
+      { k: "adminCasa", label: "Administración extra por casa al año", min: 0, max: 1500000, step: 50000, fmt: "crc" },
+      { k: "index", label: "Cuánto suben cuotas y gastos cada año", min: 0, max: 8, step: 0.5, fmt: "pct" }
+    ], note: "El impuesto de la casa es 0,25% del precio al año. Lo fija la ley." },
+    { title: "Socios y mercado", items: [
+      { k: "aporte", label: "Lo que pone cada persona que vive ahí", min: 0, max: 2000000, step: 25000, fmt: "crc" },
+      { k: "reservas", label: "Lo que la ley obliga a apartar de lo que sobra", min: 0, max: 40, step: 1, fmt: "pct" },
+      { k: "mMin", label: "Un cuarto en San Pedro, desde", min: 60000, max: 300000, step: 5000, fmt: "crc" },
+      { k: "mMax", label: "Un cuarto en San Pedro, hasta", min: 60000, max: 300000, step: 5000, fmt: "crc" }
+    ]},
+    { title: "La casa alquilada (paso 5)", items: [
+      { k: "pAdmin", label: "Contabilidad y administración al mes", min: 0, max: 400000, step: 10000, fmt: "crc" },
+      { k: "pReserva", label: "Ahorro para arreglos al mes", min: 0, max: 150000, step: 2000, fmt: "crc" },
+      { k: "pMobil", label: "Muebles", min: 0, max: 5000000, step: 100000, fmt: "crc" },
+      { k: "pDeposito", label: "Depósito de garantía", min: 0, max: 3, step: 1, fmt: "meses" }
+    ]}
+  ];
+  var PILOT_MAIN = { k: "pAlquiler", label: "Lo que cobra el dueño por la casa al mes", min: 100000, max: 650000, step: 5000, fmt: "crc" };
+
+  var state = loadState();
+  var controls = {};
+  var pending = false;
+
+  function clone(o) { var r = {}; for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) r[k] = o[k]; return r; }
+  function merge(a, b) { var r = clone(a); for (var k in b) if (Object.prototype.hasOwnProperty.call(b, k)) r[k] = b[k]; return r; }
+  function loadState() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      var s = clone(DEFAULTS);
+      if (saved) for (var k in DEFAULTS) if (Object.prototype.hasOwnProperty.call(saved, k) && typeof saved[k] === typeof DEFAULTS[k]) s[k] = saved[k];
+      return s;
+    } catch (e) { return clone(DEFAULTS); }
+  }
+  function saveState() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* sin almacenamiento */ } }
+
+  /* Formatos */
+  function g3(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+  function crc(v, to) {
+    if (!isFinite(v)) return "imposible";
+    var r = Math.round(v / (to || 1)) * (to || 1);
+    return (r < 0 ? "-₡" : "₡") + g3(Math.abs(r));
+  }
+  function millones(v) {
+    var a = Math.abs(v);
+    var s = (a / 1e6).toFixed(a >= 10e6 ? 1 : 2).replace(".", ",").replace(/,?0+$/, "");
+    return (v < 0 ? "-₡" : "₡") + s + " millones";
+  }
+  function mval(v) { return (v < 0 ? "-" : "") + (Math.abs(v) / 1e6).toFixed(1).replace(".", ","); }
+  function pct(v) { return String(Math.round(v * 100) / 100).replace(".", ",") + "%"; }
+  function fmtVal(v, f) {
+    if (f === "crc") return crc(v);
+    if (f === "pct") return pct(v);
+    if (f === "anos") return v + (v === 1 ? " año" : " años");
+    if (f === "meses") return v + (v === 1 ? " mes" : " meses");
+    return String(v);
+  }
+  function pl(n, a, b) { return n === 1 ? a : b; }
+  function sp(cls, t) { return '<span class="num ' + cls + '">' + t + "</span>"; }
+  function tok() {
+    var cs = getComputedStyle(document.documentElement);
+    function g(n) { return cs.getPropertyValue(n).trim(); }
+    return { ink: g("--ink"), muted: g("--muted"), line: g("--line"), slate: g("--slate"), teal: g("--teal"), tealSoft: g("--teal-soft"),
+      mango: g("--mango"), mangoSoft: g("--mango-soft"), red: g("--red"), redSoft: g("--red-soft"), surface: g("--surface") };
+  }
+  function alpha(hex, a) {
+    var h = hex.replace("#", "");
+    if (h.length === 3) h = h.split("").map(function (c) { return c + c; }).join("");
+    var n = parseInt(h, 16);
+    return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
+  }
+
+  /* Modelo */
+  function pmtAnual(P, tasa, anos) {
+    if (P <= 0) return 0;
+    var n = anos * 12, i = tasa / 1200;
+    return i === 0 ? P / n * 12 : P * i / (1 - Math.pow(1 + i, -n)) * 12;
+  }
+  function calc(s) {
+    var v = s.vacancia / 100, cuartosTot = s.casas * s.cuartos;
+    var potencial = cuartosTot * s.renta * 12, vacLoss = potencial * v, ingreso = potencial - vacLoss;
+    var serv = s.casas * s.servicios * 12, isbi = s.casas * s.precio * s.isbi / 100;
+    var seg = s.casas * s.precio * s.seguro / 100, mant = s.casas * s.precio * s.mant / 100;
+    var admin = s.adminBase + s.adminCasa * s.casas;
+    var gastos = serv + isbi + seg + mant + admin;
+    var prestamo = s.casas * s.precio * s.financiado / 100;
+    var deuda = pmtAnual(prestamo, s.tasa, s.plazo);
+    var flujo1 = ingreso - gastos - deuda;
+    var ocup = cuartosTot * 12 * (1 - v);
+    var eq = ocup > 0 ? (gastos + deuda) / ocup : Infinity;
+    var gr = s.index / 100, anos = [], acum = 0, primerPos = null, sumPos = 0;
+    for (var t = 0; t < 10; t++) {
+      var f = Math.pow(1 + gr, t), fl = ingreso * f - gastos * f - (t < s.plazo ? deuda : 0);
+      acum += fl; if (fl > 0) sumPos += fl;
+      anos.push(fl);
+      if (primerPos === null && fl >= 0) primerPos = t + 1;
+    }
+    var pc = { prima: s.precio * (1 - s.financiado / 100), cierre: s.precio * s.cierre / 100, remodel: s.remodel, mobil: s.mobil };
+    var capCasa = pc.prima + pc.cierre + pc.remodel + pc.mobil;
+    return { cuartosTot: cuartosTot, potencial: potencial, vacLoss: vacLoss, ingreso: ingreso, serv: serv, isbi: isbi, seg: seg, mant: mant,
+      admin: admin, gastos: gastos, prestamo: prestamo, deuda: deuda, flujo1: flujo1, eq: eq, anos: anos, acum: acum, primerPos: primerPos,
+      sumPos: sumPos, pc: pc, capCasa: capCasa, capital: s.casas * capCasa, aportes: cuartosTot * s.aporte };
+  }
+  function pilot(s) {
+    var ingreso = s.cuartos * s.renta * (1 - s.vacancia / 100), admin = s.pDonada ? 0 : s.pAdmin;
+    var techo = ingreso - s.servicios - s.pReserva - admin;
+    return { ingreso: ingreso, admin: admin, techo: techo, margen: techo - s.pAlquiler, capital: s.pDeposito * s.pAlquiler + s.pMobil + 2 * s.pAlquiler };
+  }
+
+  /* Controles */
+  function buildControl(spec, box) {
+    var id = "c_" + spec.k, row = document.createElement("div");
+    row.className = "ctl";
+    row.innerHTML = '<div class="ctl-head"><label for="' + id + '"></label><output for="' + id + '"></output></div><input type="range" id="' + id +
+      '" min="' + spec.min + '" max="' + spec.max + '" step="' + spec.step + '">';
+    row.querySelector("label").textContent = spec.label;
+    box.appendChild(row);
+    var input = row.querySelector("input");
+    input.addEventListener("input", function () {
+      state[spec.k] = parseFloat(input.value);
+      if (spec.k === "mMin" && state.mMin > state.mMax) state.mMax = state.mMin;
+      if (spec.k === "mMax" && state.mMax < state.mMin) state.mMin = state.mMax;
+      clearPreset(); schedule();
+    });
+    (controls[spec.k] = controls[spec.k] || []).push({ input: input, out: row.querySelector("output"), spec: spec });
+  }
+  function buildControls() {
+    var gbox = document.getElementById("groups");
+    GROUPS.forEach(function (gr) {
+      var col = document.createElement("div"), h = document.createElement("h4");
+      h.textContent = gr.title; col.appendChild(h);
+      gr.items.forEach(function (it) { buildControl(it, col); });
+      if (gr.note) { var p = document.createElement("div"); p.className = "fixed"; p.textContent = gr.note; col.appendChild(p); }
+      gbox.appendChild(col);
+    });
+    buildControl(PILOT_MAIN, document.getElementById("pilotCtl"));
+  }
+  function syncControls() {
+    for (var k in controls) controls[k].forEach(function (c) {
+      if (String(c.input.value) !== String(state[k])) c.input.value = state[k];
+      var t = fmtVal(state[k], c.spec.fmt); c.out.textContent = t; c.input.setAttribute("aria-valuetext", t);
+    });
+    document.getElementById("pDonada").checked = !!state.pDonada;
+  }
+  function clearPreset() { document.querySelectorAll("[data-preset]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); }); }
+  function schedule() {
+    if (pending) return; pending = true;
+    requestAnimationFrame(function () { pending = false; render(); saveState(); });
+  }
+
+  /* Dibujos */
+  function drawHouses(n, k) {
+    var svg = document.getElementById("houses"), W = 72, H = 70, gap = 12, out = "";
+    var width = n * W + (n - 1) * gap, cols = k <= 3 ? k : Math.ceil(k / 2), rows = Math.ceil(k / cols);
+    for (var i = 0; i < n; i++) {
+      var x = i * (W + gap);
+      out += '<path class="roof" d="M' + x + ' 28 L' + (x + W / 2) + ' 3 L' + (x + W) + ' 28 Z"/>';
+      out += '<rect class="wall" x="' + (x + 7) + '" y="28" width="' + (W - 14) + '" height="40"/>';
+      var ww = (W - 24 - (cols - 1) * 4) / cols, wh = (30 - (rows - 1) * 4) / rows;
+      for (var j = 0; j < k; j++) {
+        var c = j % cols, r = Math.floor(j / cols);
+        out += '<rect class="win" rx="1.5" x="' + (x + 12 + c * (ww + 4)).toFixed(1) + '" y="' + (33 + r * (wh + 4)).toFixed(1) + '" width="' + ww.toFixed(1) + '" height="' + wh.toFixed(1) + '"/>';
+      }
+    }
+    svg.setAttribute("viewBox", "0 0 " + width + " " + H);
+    svg.setAttribute("width", width);
+    svg.innerHTML = out;
+    var label = n + " " + pl(n, "casa", "casas") + " de " + k + " cuartos: " + (n * k) + " personas viviendo ahí";
+    svg.setAttribute("aria-label", label);
+    document.getElementById("housesCap").textContent = label + ".";
+  }
+
+  function drawScale(eq, renta, mMin, mMax) {
+    var T = tok(), wrap = document.getElementById("scaleWrap"), svg = document.getElementById("scale");
+    var W = Math.max(300, Math.min(760, wrap.clientWidth || 700)), H = 120, pad = 14;
+    var eqv = isFinite(eq) ? eq : 400000;
+    var lo = Math.max(0, Math.floor(Math.min(100000, eqv - 30000, renta - 30000, mMin - 20000) / 25000) * 25000);
+    var hi = Math.ceil(Math.max(225000, eqv + 30000, renta + 30000, mMax + 20000) / 25000) * 25000;
+    function x(v) { return pad + (v - lo) / (hi - lo) * (W - 2 * pad); }
+    function cx(px) { var m = W < 480 ? 64 : 80; return Math.min(Math.max(px, m), W - m); }
+    var xe = Math.min(Math.max(x(eqv), pad), W - pad), xr = x(renta), ok = renta >= eq, fs = W < 480 ? 13 : 14, o = "";
+    o += '<rect x="' + pad + '" y="50" width="' + (xe - pad) + '" height="18" rx="4" fill="' + T.redSoft + '" stroke="' + T.red + '"/>';
+    o += '<rect x="' + xe + '" y="50" width="' + (W - pad - xe) + '" height="18" rx="4" fill="' + T.tealSoft + '" stroke="' + T.teal + '"/>';
+    o += '<rect x="' + x(mMin) + '" y="44" width="' + Math.max(4, x(mMax) - x(mMin)) + '" height="30" rx="4" fill="' + alpha(T.mango, 0.35) + '" stroke="' + T.mango + '" stroke-width="1.5"/>';
+    for (var v = lo; v <= hi; v += 25000) {
+      var px = x(v), anc = v === lo ? "start" : (v === hi ? "end" : "middle");
+      if (W >= 480 || (v - lo) % 50000 === 0) o += '<text x="' + px + '" y="114" font-size="' + (fs - 1) + '" text-anchor="' + anc + '" fill="' + T.muted + '">' + (v / 1000) + ' mil</text>';
+    }
+    o += '<line x1="' + xe + '" x2="' + xe + '" y1="30" y2="82" stroke="' + T.ink + '" stroke-width="2.5"/>';
+    o += '<text x="' + cx(xe) + '" y="22" font-size="' + fs + '" font-weight="700" text-anchor="middle" fill="' + T.ink + '">Mínimo ' + crc(eq, 100) + '</text>';
+    o += '<circle cx="' + xr + '" cy="59" r="11" fill="' + (ok ? T.teal : T.red) + '" stroke="' + T.surface + '" stroke-width="3"/>';
+    o += '<text x="' + cx(xr) + '" y="96" font-size="' + fs + '" font-weight="700" text-anchor="middle" fill="' + (ok ? T.teal : T.red) + '">Tu cuota ' + crc(renta) + '</text>';
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("height", H);
+    svg.innerHTML = o;
+  }
+
+  function drawEscala() {
+    var T = tok(), eqs = [], H = 190, top = 22;
+    for (var n = 1; n <= 6; n++) eqs.push(calc(merge(state, { casas: n })).eq);
+    var maxV = Math.max.apply(null, eqs.concat([state.mMax, state.renta])) * 1.3;
+    function h(v) { return Math.min(H, v / maxV * H); }
+    var o = '<div class="cols-plot" style="height:' + (H + top) + 'px">';
+    o += '<div class="band" style="bottom:' + h(state.mMin) + 'px;height:' + Math.max(3, h(state.mMax) - h(state.mMin)) + 'px"></div>';
+    o += '<div class="line" style="bottom:' + h(state.renta) + 'px"></div>';
+    eqs.forEach(function (e, i) {
+      var good = e <= state.renta, on = i + 1 === state.casas, c = good ? T.teal : T.red;
+      o += '<div class="col"><div class="bar" style="bottom:0;height:' + h(e) + 'px;background:' + alpha(c, on ? 1 : 0.45) + (on ? ";outline:2px solid " + c + ";outline-offset:2px" : "") + '"></div>' +
+        '<div class="val" style="bottom:' + (h(e) + 4) + 'px;font-weight:' + (on ? 700 : 400) + '"><em>' + Math.round(e / 1000) + ' mil</em></div></div>';
+    });
+    o += '</div><div class="cols-x">';
+    for (var k = 1; k <= 6; k++) o += '<span class="' + (k === state.casas ? "on" : "") + '">' + k + "</span>";
+    document.getElementById("escala").innerHTML = o + '</div><div class="cols-cap">Número de casas. Arriba de cada barra, el mínimo por cuarto al mes en colones.</div>';
+    return eqs;
+  }
+
+  function drawYears(anos) {
+    var T = tok(), H = 170, padT = 20, padB = 20;
+    var maxP = Math.max(0, Math.max.apply(null, anos)), maxN = Math.max(0, -Math.min.apply(null, anos));
+    var tot = (maxP + maxN) || 1, zero = padT + maxP / tot * H;
+    var o = '<div class="cols-plot" style="height:' + (H + padT + padB) + 'px;border-bottom:0">';
+    o += '<div class="zero" style="top:' + zero + 'px"></div>';
+    anos.forEach(function (v) {
+      var hh = Math.abs(v) / tot * H, c = v >= 0 ? T.teal : T.red;
+      if (v >= 0) {
+        o += '<div class="col"><div class="bar" style="top:' + (zero - hh) + 'px;height:' + hh + 'px;background:' + c + '"></div><div class="val" style="top:' + (zero - hh - 18) + 'px"><em>' + mval(v) + "</em></div></div>";
+      } else {
+        o += '<div class="col"><div class="bar down" style="top:' + zero + 'px;height:' + hh + 'px;background:' + c + '"></div><div class="val" style="top:' + (zero + hh + 2) + 'px"><em>' + mval(v) + "</em></div></div>";
+      }
+    });
+    o += '</div><div class="cols-x">';
+    for (var t = 1; t <= 10; t++) o += "<span>" + t + "</span>";
+    document.getElementById("years").innerHTML = o + '</div><div class="cols-cap">Año. Arriba de cada barra, millones de colones que sobran (o faltan, si va hacia abajo).</div>';
+  }
+
+  function drawHundred(r) {
+    var T = tok();
+    var parts = [
+      { lab: "cuota del préstamo", v: r.deuda, c: T.slate },
+      { lab: "contador y administración", v: r.admin, c: T.mango },
+      { lab: "agua, luz e internet", v: r.serv, c: alpha(T.mango, 0.5) },
+      { lab: "mantenimiento", v: r.mant, c: alpha(T.slate, 0.55) },
+      { lab: "impuesto y seguro", v: r.isbi + r.seg, c: alpha(T.slate, 0.3) },
+      { lab: "cuartos vacíos", v: r.vacLoss, c: alpha(T.red, 0.5) }
+    ];
+    var costs = parts.reduce(function (a, b) { return a + b.v; }, 0);
+    if (r.flujo1 > 0) parts.push({ lab: "sobra", v: r.flujo1, c: T.teal });
+    var total = Math.max(r.potencial, costs);
+    var html = "", list = "";
+    parts.forEach(function (p) {
+      var w = p.v / total * 100, per = Math.round(p.v / r.potencial * 100);
+      if (p.v <= 0) return;
+      html += '<div style="width:' + w.toFixed(2) + "%;background:" + p.c + '">' + (w > 9 ? "₡" + per : "") + "</div>";
+      list += '<li><i style="background:' + p.c + '"></i><span><b class="num">₡' + per + "</b> " + p.lab + "</span></li>";
+    });
+    if (costs > r.potencial) html += '<span class="marker" style="left:' + (r.potencial / total * 100).toFixed(2) + '%"></span>';
+    document.getElementById("hundred").innerHTML = html;
+    document.getElementById("hundredList").innerHTML = list;
+    var note = document.getElementById("hundredNote");
+    if (costs > r.potencial) note.innerHTML = "Los gastos suman " + sp("neg", "₡" + Math.round(costs / r.potencial * 100)) + " por cada ₡100 que pagarían los cuartos. La raya negra marca dónde se acaba la plata.";
+    else note.textContent = "Cuenta como si todos los cuartos estuvieran ocupados todo el año; los cuartos vacíos aparecen como un gasto más.";
+  }
+
+  function drawRisks(r) {
+    var s = state, base = r.flujo1 / 12;
+    var newPlazo = Math.max(5, s.plazo - 10), newV = s.vacancia + 7, newT = s.tasa + 2;
+    var defs = [
+      { q: "El préstamo hay que pagarlo en " + newPlazo + " años y no en " + s.plazo, ch: { plazo: newPlazo }, short: "un préstamo más corto" },
+      { q: "Más cuartos vacíos durante el año (" + pct(newV) + " en vez de " + pct(s.vacancia) + ")", ch: { vacancia: newV }, short: "tener más cuartos vacíos" },
+      { q: "El interés del préstamo sube de " + pct(s.tasa) + " a " + pct(newT), ch: { tasa: newT }, short: "que suba el interés" },
+      { q: "Hay que cobrar ₡20.000 menos por cuarto", ch: { renta: s.renta - 20000 }, short: "cobrar menos por cuarto" },
+      { q: "La casa sale 15% más cara", ch: { precio: s.precio * 1.15 }, short: "que la casa salga más cara" },
+      { q: "El contador y la administración cuestan 30% más", ch: { adminBase: s.adminBase * 1.3, adminCasa: s.adminCasa * 1.3 }, short: "que la administración cueste más" },
+      { q: "Año malo: más cuartos vacíos y más interés al mismo tiempo", ch: { vacancia: newV, tasa: newT }, short: "un año malo", combo: true }
+    ];
+    var rows = defs.map(function (d) { var m = calc(merge(s, d.ch)).flujo1 / 12; return { d: d, m: m, delta: m - base }; });
+    var maxDrop = Math.max.apply(null, rows.map(function (x) { return -x.delta; })) || 1;
+    rows.sort(function (a, b) { return a.delta - b.delta; });
+    document.getElementById("risks").innerHTML = rows.map(function (x) {
+      var val = x.m >= 0 ? "Sobran " + crc(x.m, 100) : "Faltan " + crc(-x.m, 100);
+      var drop = Math.max(0, -x.delta);
+      return '<div class="risk"><p class="q">' + x.d.q + '</p><p class="v ' + (x.m >= 0 ? "pos" : "neg") + '">' + val + ' al mes</p>' +
+        '<p class="d">' + (drop > 0 ? crc(drop, 100) + " al mes menos que ahora" : "Igual que ahora") + '</p><div class="sev"><i style="width:' + (drop / maxDrop * 100).toFixed(1) + '%"></i></div></div>';
+    }).join("");
+    var worst = rows.filter(function (x) { return !x.d.combo; })[0];
+    document.getElementById("riesgosTxt").innerHTML = "Ahora " + (base >= 0 ? "sobran " + sp("pos", crc(base, 100)) : "faltan " + sp("neg", crc(-base, 100))) +
+      " al mes. Así cambia si pasa una de estas cosas:";
+    document.getElementById("riesgosEnd").innerHTML = "Lo que más golpea es " + worst.d.short + "." +
+      (worst.d.ch.plazo ? " Antes de firmar, hay que conseguir el plazo más largo posible." : "");
+  }
+
+  function drawPilot(p) {
+    var T = tok(), s = state;
+    var parts = [
+      { lab: "agua, luz e internet", v: s.servicios, c: alpha(T.mango, 0.5) },
+      { lab: "ahorro para arreglos", v: s.pReserva, c: alpha(T.slate, 0.35) },
+      { lab: "contabilidad y administración", v: p.admin, c: T.mango },
+      { lab: "alquiler de la casa", v: s.pAlquiler, c: T.slate }
+    ];
+    var out = parts.reduce(function (a, b) { return a + b.v; }, 0);
+    if (p.margen > 0) parts.push({ lab: "sobra", v: p.margen, c: T.teal });
+    var total = Math.max(p.ingreso, out), html = "", list = "";
+    parts.forEach(function (x) {
+      if (x.v <= 0) return;
+      var w = x.v / total * 100;
+      html += '<div style="width:' + w.toFixed(2) + "%;background:" + x.c + '"></div>';
+      list += '<li><i style="background:' + x.c + '"></i><span><b class="num">' + crc(x.v) + "</b> " + x.lab + "</span></li>";
+    });
+    if (out > p.ingreso) html += '<span class="marker" style="left:' + (p.ingreso / total * 100).toFixed(2) + '%"></span>';
+    document.getElementById("pilotBar").innerHTML = html;
+    document.getElementById("pilotList").innerHTML = list + '<li><span class="small">Entran ' + crc(p.ingreso) + " al mes" +
+      (out > p.ingreso ? "; lo que pasa de la raya negra es lo que falta" : "") + ".</span></li>";
+    document.getElementById("pilotFacts").innerHTML =
+      '<div class="fact"><span>La casa puede costar hasta</span><b class="' + (p.techo >= 0 ? "pos" : "neg") + '">' + crc(p.techo, 1000) + "</b><span>al mes</span></div>" +
+      '<div class="fact"><span>Con el alquiler que pusiste</span><b class="' + (p.margen >= 0 ? "pos" : "neg") + '">' + (p.margen >= 0 ? "Sobran " : "Faltan ") + crc(Math.abs(p.margen), 1000) + "</b><span>al mes</span></div>" +
+      '<div class="fact"><span>Para arrancar hacen falta</span><b>' + millones(p.capital) + "</b><span>depósito, muebles y dos meses de reserva</span></div>";
+  }
+
+  function drawSources() {
+    var s = state;
+    var rows = [
+      ["Precio de cada casa", crc(s.precio), "Casa del Banco Popular a la venta en 2026: valía ₡65,3 millones y tenía 15% de descuento."],
+      ["Préstamo", pct(s.financiado) + " al " + pct(s.tasa) + ", " + s.plazo + " años", "Presupuesto 2026 del INFOCOOP (préstamos al 6,25% y a 20 años). Lo que presta de verdad hay que preguntarlo."],
+      ["Cuota por cuarto", crc(s.renta), "Un poco menos que lo que cobran cerca de la UCR en San Pedro."],
+      ["Lo que cobran en San Pedro", crc(s.mMin) + " a " + crc(s.mMax), "Anuncios de cuartos cerca de la UCR en 2026. Faltan datos de otras sedes."],
+      ["Cuartos vacíos", pct(s.vacancia), "Supuesto: se van estudiantes entre diciembre y febrero."],
+      ["Impuesto de la casa", pct(s.isbi), "Ley 7509. La cooperativa lo paga (Procuraduría, C-258-2011)."],
+      ["Seguro y mantenimiento", pct(s.seguro) + " y " + pct(s.mant), "Supuesto. Hay que cotizar con el INS."],
+      ["Contador y administración", crc(s.adminBase) + " + " + crc(s.adminCasa) + " por casa al año", "Supuesto. Incluye estados financieros revisados por un contador público."],
+      ["Notario, arreglos y muebles", pct(s.cierre) + "; " + crc(s.remodel) + "; " + crc(s.mobil), "Supuestos. Hay que cotizarlos."],
+      ["Aumento de cada año", pct(s.index), "La ley de alquileres permite subir según la inflación. Supuesto."],
+      ["Lo que se aparta por ley", pct(s.reservas), "Ley 4179, artículos 80 a 83: fondos de reserva, educación y bienestar social."]
+    ];
+    document.getElementById("srcTable").innerHTML = rows.map(function (r) { return "<tr><td>" + r[0] + '</td><td class="v">' + r[1] + "</td><td>" + r[2] + "</td></tr>"; }).join("");
+  }
+
+  /* Textos */
+  function texts(r, eqs, p) {
+    var s = state, mes = r.flujo1 / 12;
+    document.getElementById("eqBig").innerHTML = isFinite(r.eq) ? sp(r.eq > s.renta ? "neg" : "pos", crc(r.eq, 100)) : "Imposible";
+    var t = "Con tu cuota de " + sp("", crc(s.renta)) + (mes >= 0 ? " sobran " + sp("pos", crc(mes, 100)) : " faltan " + sp("neg", crc(-mes, 100))) + " al mes entre todas las casas. ";
+    if (r.eq < s.mMin) t += "El mínimo es menos de lo que cobran en San Pedro (" + crc(s.mMin) + " a " + crc(s.mMax) + "), así que los cuartos podrían salir más baratos.";
+    else if (r.eq <= s.mMax) t += "El mínimo es casi lo mismo que cobran en San Pedro (" + crc(s.mMin) + " a " + crc(s.mMax) + "): casi no habría ahorro para quien vive ahí.";
+    else t += "El mínimo es más de lo que cobran en San Pedro (" + crc(s.mMin) + " a " + crc(s.mMax) + "): con estos números la cooperativa no tendría cuartos más baratos.";
+    document.getElementById("cobrarTxt").innerHTML = t;
+    document.getElementById("escalaTxt").innerHTML = "El contador, los papeles y la administración cuestan casi lo mismo con 1 casa que con 3. Con más casas, ese gasto se reparte entre más cuartos: con 1 casa el mínimo es " +
+      sp("", crc(eqs[0], 100)) + " y con 3, " + sp("", crc(eqs[2], 100)) + ".";
+
+    document.getElementById("capBig").textContent = millones(r.capital);
+    var items = [["Prima (lo que se paga de contado)", r.pc.prima], ["Notario, traspaso y papeles", r.pc.cierre], ["Arreglos", r.pc.remodel], ["Muebles", r.pc.mobil]];
+    var maxI = Math.max.apply(null, items.map(function (x) { return x[1]; })) || 1;
+    document.getElementById("capRows").innerHTML = items.map(function (x) {
+      var v = x[1] * s.casas;
+      return '<div class="row"><span>' + x[0] + "</span><b>" + millones(v) + '</b><div class="track"><i style="width:' + (x[1] / maxI * 100).toFixed(1) + '%"></i></div></div>';
+    }).join("");
+    var pctRes = r.capital > 0 ? Math.min(100, r.aportes / r.capital * 100) : 0;
+    var nOwn = pctRes > 0 ? Math.min(100, Math.max(1, Math.round(pctRes))) : 0, w = "";
+    for (var i = 0; i < 100; i++) w += '<i class="' + (i < nOwn ? "own" : "") + '"></i>';
+    var wf = document.getElementById("waffle");
+    wf.innerHTML = w;
+    wf.setAttribute("aria-label", nOwn + " de cada 100 colones los ponen quienes viven ahí");
+    document.getElementById("waffleTxt").innerHTML = "Si cada una de las " + r.cuartosTot + " personas que van a vivir ahí pone " + sp("", crc(s.aporte)) + ", juntan " +
+      sp("", millones(r.aportes)) + ". En el cuadro son los " + nOwn + " " + pl(nOwn, "cuadrito verde", "cuadritos verdes") + ". " +
+      (nOwn < 100 ? "Los otros " + (100 - nOwn) + " tienen que salir de donaciones, de la municipalidad o de una casa prestada." : "Con eso alcanza.");
+    var al = document.getElementById("minAlert");
+    if (r.cuartosTot < 8) {
+      al.classList.remove("hidden");
+      al.textContent = "Para formar una cooperativa hacen falta al menos 8 personas. Con " + r.cuartosTot + " cuartos faltan " + (8 - r.cuartosTot) +
+        " socios más: pueden ser personas u organizaciones que apoyen sin vivir ahí.";
+    } else al.classList.add("hidden");
+    document.getElementById("loanTxt").innerHTML = "Además, el préstamo sería de " + millones(r.prestamo) + ", a pagar en " + s.plazo + " años: " + crc(r.deuda / 12, 100) + " al mes.";
+
+    var a = "El primer año " + (r.flujo1 >= 0 ? "sobran " + sp("pos", crc(r.flujo1, 1000)) : "faltan " + sp("neg", crc(-r.flujo1, 1000))) + ". ";
+    a += r.acum >= 0 ? "Al final de los 10 años se habrán juntado " + sp("pos", millones(r.acum)) + "." : "En 10 años faltarían " + sp("neg", millones(-r.acum)) + " en total.";
+    document.getElementById("aguantarTxt").innerHTML = a;
+    var improving = r.anos[9] > r.anos[0];
+    document.getElementById("yearsNote").textContent = (improving ? "Mejora con los años porque la cuota del préstamo se queda igual, mientras lo que pagan los cuartos sube un poco cada año. " : "") +
+      "No incluye arreglos grandes, como cambiar el techo.";
+
+    document.getElementById("dCasas").textContent = s.casas;
+    document.getElementById("dCuartos").textContent = s.cuartos;
+    document.getElementById("dRenta").textContent = crc(s.renta);
+    document.getElementById("dockStatus").innerHTML = "Mínimo por cuarto: <b class=\"num\">" + crc(r.eq, 100) + "</b><br>" +
+      (mes >= 0 ? '<b class="num pos">Sobran ' + crc(mes, 100) + "</b>" : '<b class="num neg">Faltan ' + crc(-mes, 100) + "</b>") + " al mes";
+  }
+
+  function render() {
+    syncControls();
+    var r = calc(state), p = pilot(state);
+    drawHouses(state.casas, state.cuartos);
+    drawScale(r.eq, state.renta, state.mMin, state.mMax);
+    var eqs = drawEscala();
+    drawYears(r.anos);
+    drawHundred(r);
+    drawRisks(r);
+    drawPilot(p);
+    drawSources();
+    texts(r, eqs, p);
+  }
+
+  function fitDock() {
+    var d = document.getElementById("dock");
+    document.body.style.paddingBottom = (d.offsetHeight + 16) + "px";
+  }
+
+  function init() {
+    buildControls();
+    document.querySelectorAll("[data-step]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = b.getAttribute("data-step"), d = parseInt(b.getAttribute("data-d"), 10), lim = LIMITS[k];
+        state[k] = Math.min(lim[1], Math.max(lim[0], state[k] + d));
+        clearPreset(); schedule();
+      });
+    });
+    document.querySelectorAll("[data-preset]").forEach(function (b) {
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () {
+        state = merge(DEFAULTS, PRESETS[b.getAttribute("data-preset")]);
+        schedule(); clearPreset(); b.setAttribute("aria-pressed", "true");
+      });
+    });
+    document.getElementById("pDonada").addEventListener("change", function (e) { state.pDonada = e.target.checked; clearPreset(); schedule(); });
+    document.getElementById("resetBtn").addEventListener("click", function () { state = clone(DEFAULTS); clearPreset(); schedule(); });
+    try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render); } catch (e) { /* navegador antiguo */ }
+    new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    var rt;
+    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { render(); fitDock(); }, 100); });
+    render();
+    fitDock();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
+</body>
+</html>
